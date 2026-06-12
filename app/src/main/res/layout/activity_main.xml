@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <WebView
-        android:id="@+id/webview_terminal"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
     <HorizontalScrollView
+        android:id="@+id/extra_keys_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:background="#1A1A1A"
         android:scrollbars="none">
         
@@ -38,4 +33,22 @@
             
         </LinearLayout>
     </HorizontalScrollView>
-</LinearLayout>
+
+    <WebView
+        android:id="@+id/webview_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/extra_keys_scroll" />
+
+    <EditText
+        android:id="@+id/hidden_input"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_alignParentTop="true"
+        android:background="@null"
+        android:textColor="#00000000"
+        android:cursorVisible="false"
+        android:inputType="textVisiblePassword|textNoSuggestions"
+        android:imeOptions="actionDone" />
+
+</RelativeLayout>
