@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="xterm.css" />
+    <script src="xterm.js"></script>
+    <style>
+        body { margin: 0; background-color: #000; overflow: hidden; }
+        #terminal-container { width: 100vw; height: 100vh; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div id="terminal-container"></div>
+    <script>
+        var term = new Terminal({
+            theme: { background: '#000000', foreground: '#00FF00', cursor: '#FFFFFF' },
+            fontFamily: 'monospace',
+            fontSize: 14,
+            cursorBlink: true
+        });
+        term.open(document.getElementById('terminal-container'));
+
+        // কীবোর্ডে টাইপ করা কমান্ডগুলো অ্যান্ড্রয়েডে পাঠানো
+        term.onData(e => {
+            Android.sendInput(e);
+        });
+
+        // অ্যান্ড্রয়েড (C++) থেকে আসা ডেটা টার্মিনালে দেখানো (Base64 ডিকোড করে)
+        window.writeBase64 = function(base64) {
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            term.write(bytes);
+        };
+
+        // শুরুতে একটি ওয়েলকাম মেসেজ
+        term.write('Welcome to TermLab OS (VS Code Terminal Engine)\r\n');
+    </script>
+</body>
+</html>

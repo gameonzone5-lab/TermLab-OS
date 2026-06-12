@@ -1,59 +1,81 @@
 package com.autokaaj.termlab
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
-import android.widget.TextView
+import android.util.Base64
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var tempTerminalText: TextView
+    private lateinit var webView: WebView
+    private var outputStream: FileOutputStream? = null
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tempTerminalText = findViewById(R.id.temp_terminal_text)
-        tempTerminalText.text = "[System] Booting PTY Engine...\n"
-
-        // C++ থেকে PTY তৈরি করা
-        val ptyFd = createPTY()
+        webView = findViewById(R.id.webview_terminal)
         
+        // WebView কনফিগারেশন
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.webViewClient = WebViewClient()
+        
+        // জাভাস্ক্রিপ্ট থেকে অ্যান্ড্রয়েডে কল রিসিভ করার ব্রিজ
+        webView.addJavascriptInterface(WebAppInterface(), "Android")
+
+        // আমাদের তৈরি করা টার্মিনাল UI লোড করা
+        webView.loadUrl("file:///android_asset/xterm/index.html")
+
+        // C++ কোর থেকে শেল চালু করা
+        startPTY()
+    }
+
+    private fun startPTY() {
+        val ptyFd = createPTY()
         if (ptyFd > 0) {
             val pfd = ParcelFileDescriptor.adoptFd(ptyFd)
             val inputStream = FileInputStream(pfd.fileDescriptor)
-            val outputStream = FileOutputStream(pfd.fileDescriptor)
+            outputStream = FileOutputStream(pfd.fileDescriptor)
 
-            // ব্যাকগ্রাউন্ড থ্রেড: শেল থেকে সবসময় আউটপুট পড়ে স্ক্রিনে দেখাবে
+            // ব্যাকগ্রাউন্ড থ্রেড: শেল থেকে আউটপুট পড়বে এবং WebView-তে পাঠাবে
             thread {
                 val buffer = ByteArray(4096)
                 var read: Int
                 try {
                     while (inputStream.read(buffer).also { read = it } != -1) {
-                        val output = String(buffer, 0, read)
+                        val b64 = Base64.encodeToString(buffer, 0, read, Base64.NO_WRAP)
                         runOnUiThread {
-                            tempTerminalText.append(output)
+                            webView.evaluateJavascript("window.writeBase64('$b64');", null)
                         }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
-
-            // টেস্ট করার জন্য ১ সেকেন্ড পর ব্যাকগ্রাউন্ডে একটি লিনাক্স কমান্ড পাঠানো
-            thread {
-                Thread.sleep(1000)
-                outputStream.write("echo '\n--- System Information ---'\nid\nls -l /\n".toByteArray())
-            }
-
-        } else {
-            tempTerminalText.append("[Error] Failed to initialize PTY core!\n")
         }
     }
 
-    // C++ ফাংশন কল
+    // JS থেকে ইনপুট নিয়ে C++ শেলে পাঠানো
+    inner class WebAppInterface {
+        @JavascriptInterface
+        fun sendInput(input: String) {
+            try {
+                outputStream?.write(input.toByteArray())
+                outputStream?.flush()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     external fun createPTY(): Int
 
     companion object {
