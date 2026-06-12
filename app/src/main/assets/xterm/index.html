@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <style>
         body { margin: 0; background-color: #000; height: 100vh; overflow: hidden; }
-        #terminal-container { width: 100vw; height: 100vh; padding: 5px; }
+        #terminal-container { width: 100vw; height: 100vh; padding: 2px; }
+        .xterm-helper-textarea { outline: none; border: none; background: transparent; }
     </style>
 </head>
 <body>
@@ -17,10 +18,16 @@
             fontFamily: 'monospace',
             fontSize: 14,
             cursorBlink: true,
-            disableStdin: true // ওয়েবভিউ-এর ইনপুট পুরোপুরি বন্ধ!
+            disableStdin: false // এখন থেকে xterm নিজেই কীবোর্ড ম্যানেজ করবে
         });
         term.open(document.getElementById('terminal-container'));
 
+        // টাইপ করা ক্যারেক্টার সরাসরি C++ ইঞ্জিনে পাঠানো
+        term.onData(e => {
+            Android.sendInput(e);
+        });
+
+        // C++ থেকে আসা ডেটা রেন্ডার করা
         window.writeBase64 = function(base64) {
             const binary_string = window.atob(base64);
             const len = binary_string.length;
@@ -30,6 +37,18 @@
             }
             term.write(bytes);
         };
+
+        // স্ক্রিনে টাচ করলেই কীবোর্ড আসবে
+        document.getElementById('terminal-container').addEventListener('click', () => {
+            term.focus();
+        });
+
+        // অ্যান্ড্রয়েড এক্সট্রা বাটন চাপলে ফোকাস ধরে রাখার ফাংশন
+        window.focusTerm = function() {
+            term.focus();
+        };
+
+        term.write('\x1b[1;32mWelcome to TermLab Advanced Console\x1b[0m\r\n');
     </script>
 </body>
 </html>
