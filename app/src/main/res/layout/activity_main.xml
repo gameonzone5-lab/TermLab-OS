@@ -5,9 +5,14 @@
     android:background="#000000"
     android:orientation="vertical">
 
-    <com.termux.view.TerminalView
-        android:id="@+id/terminal_view"
+    <TextView
+        android:id="@+id/temp_terminal_text"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:textColor="#00FF00"
+        android:textSize="14sp"
+        android:fontFamily="monospace"
+        android:padding="8dp"
+        android:text="[System initialized...]\nWaiting for Native C++ (PTY) Core integration..." />
 
 </LinearLayout>
