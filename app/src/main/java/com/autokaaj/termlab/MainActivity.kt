@@ -15,6 +15,7 @@ import kotlin.concurrent.thread
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private var outputStream: FileOutputStream? = null
+    private var isPtyStarted = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,19 +24,24 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webview_terminal)
         
-        // WebView কনফিগারেশন
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.webViewClient = WebViewClient()
+        webView.settings.allowFileAccess = true
         
-        // জাভাস্ক্রিপ্ট থেকে অ্যান্ড্রয়েডে কল রিসিভ করার ব্রিজ
         webView.addJavascriptInterface(WebAppInterface(), "Android")
 
-        // আমাদের তৈরি করা টার্মিনাল UI লোড করা
-        webView.loadUrl("file:///android_asset/xterm/index.html")
+        // গ্রাফিক্স (WebView) পুরোপুরি লোড হওয়ার পরই কেবল C++ শেল চালু হবে
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                if (!isPtyStarted) {
+                    isPtyStarted = true
+                    startPTY()
+                }
+            }
+        }
 
-        // C++ কোর থেকে শেল চালু করা
-        startPTY()
+        webView.loadUrl("file:///android_asset/xterm/index.html")
     }
 
     private fun startPTY() {
@@ -45,7 +51,6 @@ class MainActivity : AppCompatActivity() {
             val inputStream = FileInputStream(pfd.fileDescriptor)
             outputStream = FileOutputStream(pfd.fileDescriptor)
 
-            // ব্যাকগ্রাউন্ড থ্রেড: শেল থেকে আউটপুট পড়বে এবং WebView-তে পাঠাবে
             thread {
                 val buffer = ByteArray(4096)
                 var read: Int
@@ -63,7 +68,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // JS থেকে ইনপুট নিয়ে C++ শেলে পাঠানো
     inner class WebAppInterface {
         @JavascriptInterface
         fun sendInput(input: String) {

@@ -6,6 +6,8 @@
     <style>
         body { margin: 0; background-color: #000; overflow: hidden; }
         #terminal-container { width: 100vw; height: 100vh; padding: 5px; }
+        /* মোবাইলের কীবোর্ড ঠিকমতো আসার জন্য */
+        .xterm-helper-textarea { outline: none; border: none; background: transparent; }
     </style>
 </head>
 <body>
@@ -19,12 +21,17 @@
         });
         term.open(document.getElementById('terminal-container'));
 
+        // টার্মিনালের যেকোনো জায়গায় টাচ করলে কীবোর্ড ওপেন হবে
+        document.getElementById('terminal-container').addEventListener('click', function() {
+            term.focus();
+        });
+
         // কীবোর্ডে টাইপ করা কমান্ডগুলো অ্যান্ড্রয়েডে পাঠানো
         term.onData(e => {
             Android.sendInput(e);
         });
 
-        // অ্যান্ড্রয়েড (C++) থেকে আসা ডেটা টার্মিনালে দেখানো (Base64 ডিকোড করে)
+        // অ্যান্ড্রয়েড থেকে আসা ডেটা টার্মিনালে দেখানো
         window.writeBase64 = function(base64) {
             const binary_string = window.atob(base64);
             const len = binary_string.length;
@@ -35,8 +42,8 @@
             term.write(bytes);
         };
 
-        // শুরুতে একটি ওয়েলকাম মেসেজ
-        term.write('Welcome to TermLab OS (VS Code Terminal Engine)\r\n');
+        // নিরাপদ ওয়েলকাম মেসেজ
+        term.write('Welcome to TermLab Advanced Console\r\n');
     </script>
 </body>
 </html>
