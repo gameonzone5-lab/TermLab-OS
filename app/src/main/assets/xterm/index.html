@@ -5,51 +5,21 @@
     <script src="xterm.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <style>
-        body { margin: 0; background-color: #000; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #terminal-container { flex: 1; padding: 5px; }
-        
-        #extra-keys { display: flex; background: #1a1a1a; padding: 8px 5px; overflow-x: auto; border-top: 1px solid #333; }
-        .key-btn { background: #333; color: #FFF; border: none; padding: 8px 15px; margin: 0 4px; border-radius: 4px; font-family: monospace; font-size: 14px; font-weight: bold; flex-shrink: 0; }
-        .key-btn:active { background: #555; }
-        
-        .xterm-helper-textarea { outline: none; border: none; background: transparent; }
+        body { margin: 0; background-color: #000; height: 100vh; overflow: hidden; }
+        #terminal-container { width: 100vw; height: 100vh; padding: 5px; }
     </style>
 </head>
 <body>
     <div id="terminal-container"></div>
-    
-    <div id="extra-keys">
-        <button class="key-btn" onclick="sendCtrl('c')">CTRL+C</button>
-        <button class="key-btn" onclick="sendKey('\x1b')">ESC</button>
-        <button class="key-btn" onclick="sendKey('\x09')">TAB</button>
-        <button class="key-btn" onclick="sendKey('-')">-</button>
-        <button class="key-btn" onclick="sendKey('/')">/</button>
-        <button class="key-btn" onclick="sendKey('\r')">ENTER</button>
-    </div>
-
     <script>
         var term = new Terminal({
             theme: { background: '#000000', foreground: '#00FF00', cursor: '#FFFFFF' },
             fontFamily: 'monospace',
             fontSize: 14,
-            cursorBlink: true
+            cursorBlink: true,
+            disableStdin: true // ওয়েবভিউ-এর ইনপুট পুরোপুরি বন্ধ!
         });
         term.open(document.getElementById('terminal-container'));
-
-        // রিয়েল টার্মিনালের মতো কাজ করার জন্য মোবাইলের Auto-correct এবং Predictive Text সম্পূর্ণ বন্ধ করা
-        term.textarea.setAttribute('autocapitalize', 'none');
-        term.textarea.setAttribute('autocomplete', 'off');
-        term.textarea.setAttribute('autocorrect', 'off');
-        term.textarea.setAttribute('spellcheck', 'false');
-
-        document.getElementById('terminal-container').addEventListener('click', function() {
-            term.focus();
-        });
-
-        // কীবোর্ডের ইনপুট সরাসরি ইঞ্জিনে পাঠানো
-        term.onData(e => {
-            Android.sendInput(e);
-        });
 
         window.writeBase64 = function(base64) {
             const binary_string = window.atob(base64);
@@ -60,19 +30,6 @@
             }
             term.write(bytes);
         };
-
-        window.sendKey = function(char) {
-            Android.sendInput(char);
-            term.focus();
-        };
-        
-        window.sendCtrl = function(char) {
-            const ctrlChar = String.fromCharCode(char.charCodeAt(0) - 96);
-            Android.sendInput(ctrlChar);
-            term.focus();
-        };
-
-        term.write('Welcome to TermLab Advanced Console\r\n');
     </script>
 </body>
 </html>
