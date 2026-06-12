@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
     <TextView
         android:id="@+id/temp_terminal_text"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:textColor="#00FF00"
         android:textSize="14sp"
         android:fontFamily="monospace"
-        android:padding="8dp"
-        android:text="[System initialized...]\nWaiting for Native C++ (PTY) Core integration..." />
+        android:padding="8dp" />
 
-</LinearLayout>
+</ScrollView>
